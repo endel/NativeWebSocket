@@ -1,7 +1,7 @@
 # UnityWebSockets
 
 This client uses `System.Net.WebSockets`, with support for WebGL/HTML5 builds.
-Most of the implementatin is highly based on [Jiri Hybek](https://github.com/jirihybek/unity-websocket-webgl)'s work.
+Most of the implementation is highly based on [Jiri Hybek](https://github.com/jirihybek/unity-websocket-webgl)'s work.
 
 ## Usage
 
