@@ -278,6 +278,7 @@ namespace UnityWebSockets
 			catch (Exception ex)
 			{
 				OnError?.Invoke(ex.Message);
+				OnClose?.Invoke(WebSocketCloseCode.Abnormal);
 			}
 		}
 
