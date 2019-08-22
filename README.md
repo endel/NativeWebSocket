@@ -2,9 +2,10 @@
 
 This is the simplest and easiest WebSocket library for Unity you can find!
 
-- No external DLL's required
+- No external DLL's required (uses built-in `System.Net.WebSockets`)
 - WebGL/HTML5 support
 - Supports all major build targets
+- Very simple API
 
 Requires Unity 2019+ with .NET 4.x+ Runtime
 
@@ -16,41 +17,66 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-using UnityWebSockets;
+using NativeWebSocket;
 
 public class Connection : MonoBehaviour
 {
-    WebSocket websocket;
+  WebSocket websocket;
 
-    // Start is called before the first frame update
-    async void Start()
+  // Start is called before the first frame update
+  async void Start()
+  {
+    websocket = new WebSocket("ws://localhost:2567");
+
+    websocket.OnOpen += () =>
     {
-      websocket = new WebSocket("ws://localhost:2567");
+      Debug.Log("Connection open!");
+    };
 
-      websocket.OnOpen += () =>
-      {
-        Debug.Log("Connection open!");
-      };
+    websocket.OnError += (e) =>
+    {
+      Debug.Log("Error! " + e);
+    };
 
-      websocket.OnError += (e) =>
-      {
-        Debug.Log("Error! " + e);
-      };
+    websocket.OnClose += (e) =>
+    {
+      Debug.Log("Connection closed!");
+    };
 
-      websocket.OnClose += (e) =>
-      {
-        Debug.Log("Connection closed!");
-      };
+    websocket.OnMessage += (bytes) =>
+    {
+      Debug.Log("OnMessage!");
+      Debug.Log(bytes);
 
-      websocket.OnMessage += (bytes) =>
-      {
-        Debug.Log("OnMessage!");
-        Debug.Log(bytes);
-      };
+      // getting the message as a string
+      // var message = System.Text.Encoding.UTF8.GetString(bytes);
+      // Debug.Log("OnMessage! " + message);
+    };
 
-      // waiting for messages
-      await websocket.Connect();
+    // Keep sending messages at every 0.3s
+    InvokeRepeating("SendWebSocketMessage", 0.0f, 0.3f);
+
+    // waiting for messages
+    await websocket.Connect();
+  }
+
+  async void SendWebSocketMessage()
+  {
+    if (websocket.State == WebSocketState.Open)
+    {
+      // Sending bytes
+      await websocket.Send(new byte[] { 10, 20, 30 });
+
+      // Sending plain text
+      await websocket.SendText("plain text message");
     }
+  }
+
+  private async void OnApplicationQuit()
+  {
+    await websocket.Close();
+  }
+
 }
 ```
 
