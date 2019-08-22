@@ -1,4 +1,4 @@
-<img src="Media/big.png?raw=true" alt="Native WebSocket" />
+<img src="Media/header.png?raw=true" alt="Native WebSocket" />
 
 This is the simplest and easiest WebSocket library for Unity you can find!
 
