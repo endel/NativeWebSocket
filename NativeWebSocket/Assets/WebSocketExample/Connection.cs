@@ -39,10 +39,10 @@ public class Connection : MonoBehaviour
         websocket.Send(new byte[] { 10, 20, 30 });
 
         // Sending plain text
-         websocket.SendText("plain text message");
+        websocket.SendText("plain text message");
       };
 
-    await websocket.Connect();
+      await websocket.Connect();
     }
 
     // Update is called once per frame
