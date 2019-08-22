@@ -1,12 +1,67 @@
-/*
- * unity-websocket-webgl
- *
- * @author Jiri Hybek <jiri@hybek.cz>
- * @copyright 2018 Jiri Hybek <jiri@hybek.cz>
- * @license Apache 2.0 - See LICENSE file distributed with this source code.
+/**
+ * TextEncoder polyfill for IE
  */
+if (typeof TextEncoder === "undefined") {
+    TextEncoder=function TextEncoder(){};
+    TextEncoder.prototype.encode = function encode(str) {
+        "use strict";
+        var Len = str.length, resPos = -1;
+        // The Uint8Array's length must be at least 3x the length of the string because an invalid UTF-16
+        //  takes up the equivelent space of 3 UTF-8 characters to encode it properly. However, Array's
+        //  have an auto expanding length and 1.5x should be just the right balance for most uses.
+        var resArr = typeof Uint8Array === "undefined" ? new Array(Len * 1.5) : new Uint8Array(Len * 3);
+        for (var point=0, nextcode=0, i = 0; i !== Len; ) {
+            point = str.charCodeAt(i), i += 1;
+            if (point >= 0xD800 && point <= 0xDBFF) {
+                if (i === Len) {
+                    resArr[resPos += 1] = 0xef/*0b11101111*/; resArr[resPos += 1] = 0xbf/*0b10111111*/;
+                    resArr[resPos += 1] = 0xbd/*0b10111101*/; break;
+                }
+                // https://mathiasbynens.be/notes/javascript-encoding#surrogate-formulae
+                nextcode = str.charCodeAt(i);
+                if (nextcode >= 0xDC00 && nextcode <= 0xDFFF) {
+                    point = (point - 0xD800) * 0x400 + nextcode - 0xDC00 + 0x10000;
+                    i += 1;
+                    if (point > 0xffff) {
+                        resArr[resPos += 1] = (0x1e/*0b11110*/<<3) | (point>>>18);
+                        resArr[resPos += 1] = (0x2/*0b10*/<<6) | ((point>>>12)&0x3f/*0b00111111*/);
+                        resArr[resPos += 1] = (0x2/*0b10*/<<6) | ((point>>>6)&0x3f/*0b00111111*/);
+                        resArr[resPos += 1] = (0x2/*0b10*/<<6) | (point&0x3f/*0b00111111*/);
+                        continue;
+                    }
+                } else {
+                    resArr[resPos += 1] = 0xef/*0b11101111*/; resArr[resPos += 1] = 0xbf/*0b10111111*/;
+                    resArr[resPos += 1] = 0xbd/*0b10111101*/; continue;
+                }
+            }
+            if (point <= 0x007f) {
+                resArr[resPos += 1] = (0x0/*0b0*/<<7) | point;
+            } else if (point <= 0x07ff) {
+                resArr[resPos += 1] = (0x6/*0b110*/<<5) | (point>>>6);
+                resArr[resPos += 1] = (0x2/*0b10*/<<6)  | (point&0x3f/*0b00111111*/);
+            } else {
+                resArr[resPos += 1] = (0xe/*0b1110*/<<4) | (point>>>12);
+                resArr[resPos += 1] = (0x2/*0b10*/<<6)    | ((point>>>6)&0x3f/*0b00111111*/);
+                resArr[resPos += 1] = (0x2/*0b10*/<<6)    | (point&0x3f/*0b00111111*/);
+            }
+        }
+        if (typeof Uint8Array !== "undefined") return resArr.subarray(0, resPos + 1);
+        // else // IE 6-9
+        resArr.length = resPos + 1; // trim off extra weight
+        return resArr;
+    };
+    TextEncoder.prototype.toString = function(){return "[object TextEncoder]"};
+    try { // Object.defineProperty only works on DOM prototypes in IE8
+        Object.defineProperty(TextEncoder.prototype,"encoding",{
+            get:function(){if(TextEncoder.prototype.isPrototypeOf(this)) return"utf-8";
+                           else throw TypeError("Illegal invocation");}
+        });
+    } catch(e) { /*IE6-8 fallback*/ TextEncoder.prototype.encoding = "utf-8"; }
+    if(typeof Symbol!=="undefined")TextEncoder.prototype[Symbol.toStringTag]="TextEncoder";
+}
 
 var LibraryWebSocket = {
+  $textEncoder: new TextEncoder(),
 	$webSocketState: {
 		/*
 		 * Map of instances
@@ -168,7 +223,19 @@ var LibraryWebSocket = {
 					_free(buffer);
 				}
 
-			}
+      } else {
+				var dataBuffer = textEncoder.encode(ev.data);
+
+				var buffer = _malloc(dataBuffer.length);
+				HEAPU8.set(dataBuffer, buffer);
+
+				try {
+					Runtime.dynCall('viii', webSocketState.onMessage, [ instanceId, buffer, dataBuffer.length ]);
+				} finally {
+					_free(buffer);
+				}
+
+      }
 
 		};
 
@@ -268,6 +335,30 @@ var LibraryWebSocket = {
 	},
 
 	/**
+	 * Send text message over WebSocket
+	 *
+	 * @param instanceId Instance ID
+	 * @param bufferPtr Pointer to the message buffer
+	 * @param length Length of the message in the buffer
+	 */
+	WebSocketSendText: function(instanceId, message) {
+
+		var instance = webSocketState.instances[instanceId];
+		if (!instance) return -1;
+
+		if (instance.ws === null)
+			return -3;
+
+		if (instance.ws.readyState !== 1)
+			return -6;
+
+		instance.ws.send(Pointer_stringify(message));
+
+		return 0;
+
+	},
+
+	/**
 	 * Return WebSocket readyState
 	 *
 	 * @param instanceId Instance ID
@@ -287,125 +378,5 @@ var LibraryWebSocket = {
 };
 
 autoAddDeps(LibraryWebSocket, '$webSocketState');
+autoAddDeps(LibraryWebSocket, '$textEncoder');
 mergeInto(LibraryManager.library, LibraryWebSocket);
-
-// var LibraryWebSockets = {
-// 	$webSocketInstances: [],
-//
-// 	SocketCreate: function(url)
-// 	{
-// 		var str = Pointer_stringify(url);
-// 		var socket = {
-// 			socket: new WebSocket(str),
-// 			buffer: new Uint8Array(0),
-// 			error: null,
-// 			messages: []
-// 		}
-//
-// 		socket.socket.binaryType = 'arraybuffer';
-//
-// 		socket.socket.onmessage = function (e) {
-// 			// Todo: handle other data types?
-// 			if (e.data instanceof Blob)
-// 			{
-// 				var reader = new FileReader();
-// 				reader.addEventListener("loadend", function() {
-// 					var array = new Uint8Array(reader.result);
-// 					socket.messages.push(array);
-// 				});
-// 				reader.readAsArrayBuffer(e.data);
-// 			}
-// 			else if (e.data instanceof ArrayBuffer)
-// 			{
-// 				var array = new Uint8Array(e.data);
-// 				socket.messages.push(array);
-// 			}
-// 		};
-//
-// 		socket.socket.onclose = function (e) {
-// 			if (e.code != 1000)
-// 			{
-// 				if (e.reason != null && e.reason.length > 0)
-// 					socket.error = e.reason;
-// 				else
-// 				{
-// 					switch (e.code)
-// 					{
-// 						case 1001:
-// 							socket.error = "Endpoint going away.";
-// 							break;
-// 						case 1002:
-// 							socket.error = "Protocol error.";
-// 							break;
-// 						case 1003:
-// 							socket.error = "Unsupported message.";
-// 							break;
-// 						case 1005:
-// 							socket.error = "No status.";
-// 							break;
-// 						case 1006:
-// 							socket.error = "Abnormal disconnection.";
-// 							break;
-// 						case 1009:
-// 							socket.error = "Data frame too large.";
-// 							break;
-// 						default:
-// 							socket.error = "Error "+e.code;
-// 					}
-// 				}
-// 			}
-// 		}
-// 		var instance = webSocketInstances.push(socket) - 1;
-// 		return instance;
-// 	},
-//
-// 	SocketState: function (socketInstance)
-// 	{
-// 		var socket = webSocketInstances[socketInstance];
-// 		return socket.socket.readyState;
-// 	},
-//
-// 	SocketError: function (socketInstance, ptr, bufsize)
-// 	{
-// 		var socket = webSocketInstances[socketInstance];
-// 		if (socket.error == null)
-// 			return 0;
-// 		var str = socket.error.slice(0, Math.max(0, bufsize - 1));
-// 		writeStringToMemory(str, ptr, false);
-// 		return 1;
-// 	},
-//
-// 	SocketSend: function (socketInstance, ptr, length)
-// 	{
-// 		var socket = webSocketInstances[socketInstance];
-// 		socket.socket.send (HEAPU8.buffer.slice(ptr, ptr+length));
-// 	},
-//
-// 	SocketRecvLength: function(socketInstance)
-// 	{
-// 		var socket = webSocketInstances[socketInstance];
-// 		if (socket.messages.length == 0)
-// 			return 0;
-// 		return socket.messages[0].length;
-// 	},
-//
-// 	SocketRecv: function (socketInstance, ptr, length)
-// 	{
-// 		var socket = webSocketInstances[socketInstance];
-// 		if (socket.messages.length == 0)
-// 			return 0;
-// 		if (socket.messages[0].length > length)
-// 			return 0;
-// 		HEAPU8.set(socket.messages[0], ptr);
-// 		socket.messages = socket.messages.slice(1);
-// 	},
-//
-// 	SocketClose: function (socketInstance)
-// 	{
-// 		var socket = webSocketInstances[socketInstance];
-// 		socket.socket.close();
-// 	}
-// };
-//
-// autoAddDeps(LibraryWebSockets, '$webSocketInstances');
-// mergeInto(LibraryManager.library, LibraryWebSockets);

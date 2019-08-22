@@ -1,7 +1,12 @@
-# UnityWebSockets
+<img src="Media/big.png?raw=true" alt="Native WebSocket" />
 
-This client uses `System.Net.WebSockets`, with support for WebGL/HTML5 builds.
-Most of the implementation is highly based on [Jiri Hybek](https://github.com/jirihybek/unity-websocket-webgl)'s work.
+This is the simplest and easiest WebSocket library for Unity you can find!
+
+- No external DLL's required
+- WebGL/HTML5 support
+- Supports all major build targets
+
+Requires Unity 2019+ with .NET 4.x+ Runtime
 
 ## Usage
 
@@ -48,6 +53,11 @@ public class Connection : MonoBehaviour
     }
 }
 ```
+
+## Acknowledgements
+
+Big thanks to [Jiri Hybek](https://github.com/jirihybek/unity-websocket-webgl).
+This implementation is based on his work.
 
 ## License
 

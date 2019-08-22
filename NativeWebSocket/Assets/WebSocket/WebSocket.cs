@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net.WebSockets;
 using System.Threading;
@@ -12,7 +12,7 @@ using AOT;
 
 using UnityEngine;
 
-namespace UnityWebSockets
+namespace NativeWebSocket
 {
 	public delegate void WebSocketOpenEventHandler();
 	public delegate void WebSocketMessageEventHandler(byte[] data);
@@ -137,6 +137,9 @@ namespace UnityWebSockets
         public static extern int WebSocketSend(int instanceId, byte[] dataPtr, int dataLength);
 
         [DllImport("__Internal")]
+        public static extern int WebSocketSendText(int instanceId, string message);
+
+        [DllImport("__Internal")]
         public static extern int WebSocketGetState(int instanceId);
 
         protected int instanceId;
@@ -148,9 +151,9 @@ namespace UnityWebSockets
 
         public WebSocket(string url)
         {
-			if (!WebSocketFactory.isInitialized) {
-				WebSocketFactory.Initialize();
-			}
+          if (!WebSocketFactory.isInitialized) {
+            WebSocketFactory.Initialize();
+          }
 
         	int instanceId = WebSocketFactory.WebSocketAllocate(url);
         	WebSocketFactory.instances.Add(instanceId, this);
@@ -168,29 +171,44 @@ namespace UnityWebSockets
             return this.instanceId;
         }
 
-        public async Task Connect()
+        public Task Connect()
         {
             int ret = WebSocketConnect(this.instanceId);
 
             if (ret < 0)
                 throw WebSocketHelpers.GetErrorMessageFromCode(ret, null);
+
+            return Task.CompletedTask;
         }
 
-        public async Task Close(WebSocketCloseCode code = WebSocketCloseCode.Normal, string reason = null)
+        public Task Close(WebSocketCloseCode code = WebSocketCloseCode.Normal, string reason = null)
         {
             int ret = WebSocketClose(this.instanceId, (int)code, reason);
 
             if (ret < 0)
                 throw WebSocketHelpers.GetErrorMessageFromCode(ret, null);
+
+            return Task.CompletedTask;
         }
 
-        public async Task Send(byte[] data)
+        public Task Send(byte[] data)
         {
             int ret = WebSocketSend(this.instanceId, data, data.Length);
 
             if (ret < 0)
                 throw WebSocketHelpers.GetErrorMessageFromCode(ret, null);
 
+            return Task.CompletedTask;
+        }
+
+        public Task SendText(string message)
+        {
+            int ret = WebSocketSendText(this.instanceId, message);
+
+            if (ret < 0)
+                throw WebSocketHelpers.GetErrorMessageFromCode(ret, null);
+
+            return Task.CompletedTask;
         }
 
         public WebSocketState State {
@@ -245,7 +263,7 @@ namespace UnityWebSockets
 
 #else
 
-	public class WebSocket : IWebSocket
+  public class WebSocket : IWebSocket
 	{
 		public event WebSocketOpenEventHandler OnOpen;
 		public event WebSocketMessageEventHandler OnMessage;
@@ -255,7 +273,13 @@ namespace UnityWebSockets
 		private Uri uri;
 		private ClientWebSocket m_Socket = new ClientWebSocket();
 
-		public WebSocket(string url)
+    private readonly object Lock = new object();
+
+    private bool isSending = false;
+    private List<ArraySegment<byte>> sendBytesQueue = new List<ArraySegment<byte>>();
+    private List<ArraySegment<byte>> sendTextQueue = new List<ArraySegment<byte>>();
+
+    public WebSocket(string url)
 		{
 			uri = new Uri(url);
 
@@ -307,21 +331,108 @@ namespace UnityWebSockets
 			}
 		}
 
-		public async Task Send(byte[] bytes)
+		public Task Send(byte[] bytes)
 		{
-			var buffer = new ArraySegment<byte>(bytes);
-			await m_Socket.SendAsync(buffer, WebSocketMessageType.Binary, true, CancellationToken.None);
+      // return m_Socket.SendAsync(buffer, WebSocketMessageType.Binary, true, CancellationToken.None);
+      return SendMessage(sendBytesQueue, WebSocketMessageType.Binary, new ArraySegment<byte>(bytes));
 		}
 
-		public async Task SendText(string message)
+		public Task SendText(string message)
 		{
 			var encoded = Encoding.UTF8.GetBytes(message);
-			var buffer = new ArraySegment<byte>(encoded, 0, encoded.Length);
 
-			await m_Socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
-		}
+      // m_Socket.SendAsync(buffer, WebSocketMessageType.Text, true, CancellationToken.None);
+      return SendMessage(sendTextQueue, WebSocketMessageType.Text, new ArraySegment<byte>(encoded, 0, encoded.Length));
+    }
 
-		public async Task Receive()
+    private async Task SendMessage(List<ArraySegment<byte>> queue, WebSocketMessageType messageType, ArraySegment<byte> buffer)
+    {
+      // Return control to the calling method immediately.
+      await Task.Yield();
+
+      // Make sure we have data.
+      if (buffer.Count == 0)
+      {
+        return;
+      }
+
+      // The state of the connection is contained in the context Items dictionary.
+      bool sending;
+
+      lock (Lock)
+      {
+        sending = isSending;
+
+        // If not, we are now.
+        if (!isSending)
+        {
+          isSending = true;
+        }
+      }
+
+      if (!sending)
+      {
+        // Lock with a timeout, just in case.
+        if (!Monitor.TryEnter(m_Socket, 1000))
+        {
+          // If we couldn't obtain exclusive access to the socket in one second, something is wrong.
+          await m_Socket.CloseAsync(WebSocketCloseStatus.InternalServerError, string.Empty, CancellationToken.None);
+          return;
+        }
+
+        try
+        {
+          // Send the message synchronously.
+          var t = m_Socket.SendAsync(buffer, messageType, true, CancellationToken.None);
+          t.Wait();
+        }
+        finally
+        {
+          Monitor.Exit(m_Socket);
+        }
+
+        // Note that we've finished sending.
+        lock (Lock)
+        {
+          isSending = false;
+        }
+
+        // Handle any queued messages.
+        await HandleQueue(queue, messageType);
+      }
+      else
+      {
+        // Add the message to the queue.
+        lock (Lock)
+        {
+          queue.Add(buffer);
+        }
+      }
+    }
+
+    private async Task HandleQueue(List<ArraySegment<byte>> queue, WebSocketMessageType messageType)
+    {
+      var buffer = new ArraySegment<byte>();
+      lock (Lock)
+      {
+        // Check for an item in the queue.
+        if (queue.Count > 0)
+        {
+          // Pull it off the top.
+          buffer = queue[0];
+          queue.RemoveAt(0);
+        }
+      }
+
+      // Send that message.
+      if (buffer.Count > 0)
+      {
+        await SendMessage(queue, messageType, buffer);
+      }
+    }
+
+
+    public async Task Receive()
 		{
 			ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[8192]);
 
@@ -377,7 +488,7 @@ namespace UnityWebSockets
 
 	///
 	/// Factory
-	/// 
+	///
 
 
 	/// <summary>
