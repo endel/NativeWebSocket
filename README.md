@@ -9,6 +9,10 @@ This is the simplest and easiest WebSocket library for Unity you can find!
 
 Requires Unity 2019+ with .NET 4.x+ Runtime
 
+> This WebSocket client is used on [colyseus-unity3d](https://github.com/colyseus/colyseus-unity3d). <br />
+> Consider supporting my work on [Patreon](https://patreon.com/endel). <br />
+> <a href="https://patreon.com/endel"><img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.herokuapp.com%2Fendel&style=for-the-badge" /></a>
+
 ## Usage
 
 ```csharp
