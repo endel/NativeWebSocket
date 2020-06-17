@@ -64,6 +64,13 @@ public class Connection : MonoBehaviour
     await websocket.Connect();
   }
 
+  void Update()
+  {
+    #if !UNITY_WEBGL || UNITY_EDITOR
+      websocket.DispatchMessageQueue();
+    #endif
+  }
+
   async void SendWebSocketMessage()
   {
     if (websocket.State == WebSocketState.Open)
