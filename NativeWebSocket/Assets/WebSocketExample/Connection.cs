@@ -12,7 +12,8 @@ public class Connection : MonoBehaviour
   // Start is called before the first frame update
   async void Start()
   {
-    websocket = new WebSocket("ws://echo.websocket.org");
+    // websocket = new WebSocket("ws://echo.websocket.org");
+    websocket = new WebSocket("ws://localhost:8080");
 
     websocket.OnOpen += () =>
     {
@@ -33,7 +34,7 @@ public class Connection : MonoBehaviour
     {
       // Reading a plain text message
       var message = System.Text.Encoding.UTF8.GetString(bytes);
-      Debug.Log("OnMessage! " + message);
+      Debug.Log("Received OnMessage! (" + bytes.Length + " bytes) " + message);
     };
 
     // Keep sending messages at every 0.3s

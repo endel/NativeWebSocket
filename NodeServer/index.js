@@ -1,5 +1,5 @@
+const crypto = require('crypto');
 const express = require('express');
-const path = require('path');
 const { createServer } = require('http');
 const WebSocket = require('ws');
 
@@ -11,16 +11,26 @@ const wss = new WebSocket.Server({ server });
 wss.on('connection', function(ws) {
   console.log("client joined.");
 
-  // send "hello world" every 1 second.
-  var id = setInterval(() => ws.send("hello world!"), 100);
+  // send "hello world" interval
+  const textInterval = setInterval(() => ws.send("hello world!"), 100);
+
+  // send random bytes interval
+  const binaryInterval = setInterval(() => ws.send(crypto.randomBytes(8).buffer), 110);
 
   ws.on('message', function(data) {
-    console.log("client sent a message:", data);
+    if (typeof(data) === "string") {
+      // client sent a string
+      console.log("string received from client -> '" + data + "'");
+
+    } else {
+      console.log("binary received from client -> " + Array.from(data).join(", ") + "");
+    }
   });
 
   ws.on('close', function() {
     console.log("client left.");
-    clearInterval(id);
+    clearInterval(textInterval);
+    clearInterval(binaryInterval);
   });
 });
 
