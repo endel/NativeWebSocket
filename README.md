@@ -96,6 +96,19 @@ public class Connection : MonoBehaviour
 }
 ```
 
+# Demonstration
+
+**1.** Start the local WebSocket server:
+
+```
+cd Server
+npm install
+npm start
+```
+
+**2.** Open the `NativeWebSocket/Assets/WebSocketExample/WebSocketExampleScene.unity` on Unity and Run.
+
+
 ## Acknowledgements
 
 Big thanks to [Jiri Hybek](https://github.com/jirihybek/unity-websocket-webgl).
