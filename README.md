@@ -13,6 +13,11 @@ Requires Unity 2019+ with .NET 4.x+ Runtime
 > Consider supporting my work on [Patreon](https://patreon.com/endel). <br />
 > <a href="https://patreon.com/endel"><img src="https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.herokuapp.com%2Fendel&style=for-the-badge" /></a>
 
+## Installation
+
+1. [Download this project](https://github.com/endel/NativeWebSocket/archive/master.zip)
+2. Copy the sources from `NativeWebSocket/Assets/WebSocket` into your `Assets` directory.
+
 ## Usage
 
 ```csharp
