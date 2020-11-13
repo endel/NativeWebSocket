@@ -165,7 +165,7 @@ var LibraryWebSocket = {
 		if (!instance) return 0;
 
 		// Close if not closed
-		if (instance.ws !== null && instance.ws.readyState < 2)
+		if (instance.ws && instance.ws.readyState < 2)
 			instance.ws.close();
 
 		// Remove reference
@@ -289,7 +289,7 @@ var LibraryWebSocket = {
 		var instance = webSocketState.instances[instanceId];
 		if (!instance) return -1;
 
-		if (instance.ws === null)
+		if (!instance.ws)
 			return -3;
 
 		if (instance.ws.readyState === 2)
@@ -322,7 +322,7 @@ var LibraryWebSocket = {
 		var instance = webSocketState.instances[instanceId];
 		if (!instance) return -1;
 
-		if (instance.ws === null)
+		if (!instance.ws)
 			return -3;
 
 		if (instance.ws.readyState !== 1)
@@ -346,7 +346,7 @@ var LibraryWebSocket = {
 		var instance = webSocketState.instances[instanceId];
 		if (!instance) return -1;
 
-		if (instance.ws === null)
+		if (!instance.ws)
 			return -3;
 
 		if (instance.ws.readyState !== 1)
