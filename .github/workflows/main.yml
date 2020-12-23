@@ -1,0 +1,22 @@
+name: CI
+
+on:
+  push:
+    branches:
+    - master
+
+jobs:
+  split-upm:
+    name: update upm branch
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: update upm branch
+      run: |
+        git log -1
+        git subtree split -P "$PKG_ROOT" -b upm
+        git push origin upm
+      env:
+        PKG_ROOT: NativeWebSocket/Assets
