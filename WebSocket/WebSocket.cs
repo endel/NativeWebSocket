@@ -239,6 +239,34 @@ namespace NativeWebSocket
 
       this.instanceId = instanceId;
     }
+    
+    public WebSocket (string url, string subprotocol, Dictionary<string, string> headers = null) {
+      if (!WebSocketFactory.isInitialized) {
+        WebSocketFactory.Initialize ();
+      }
+
+      int instanceId = WebSocketFactory.WebSocketAllocate (url);
+      WebSocketFactory.instances.Add (instanceId, this);
+
+      WebSocketFactory.WebSocketAddSubProtocol(instanceId, subprotocol);
+
+      this.instanceId = instanceId;
+    }
+
+    public WebSocket (string url, List<string> subprotocols, Dictionary<string, string> headers = null) {
+      if (!WebSocketFactory.isInitialized) {
+        WebSocketFactory.Initialize ();
+      }
+
+      int instanceId = WebSocketFactory.WebSocketAllocate (url);
+      WebSocketFactory.instances.Add (instanceId, this);
+
+      foreach (string subprotocol in subprotocols) {
+        WebSocketFactory.WebSocketAddSubProtocol(instanceId, subprotocol);
+      }
+
+      this.instanceId = instanceId;
+    }
 
     ~WebSocket () {
       WebSocketFactory.HandleInstanceDestroy (this.instanceId);
@@ -344,6 +372,7 @@ namespace NativeWebSocket
 
         private Uri uri;
         private Dictionary<string, string> headers;
+        private List<string> subprotocols;
         private ClientWebSocket m_Socket = new ClientWebSocket();
 
         private CancellationTokenSource m_TokenSource;
@@ -368,6 +397,48 @@ namespace NativeWebSocket
                 this.headers = headers;
             }
 
+            subprotocols = new List<string>();
+
+            string protocol = uri.Scheme;
+            if (!protocol.Equals("ws") && !protocol.Equals("wss"))
+                throw new ArgumentException("Unsupported protocol: " + protocol);
+        }
+
+        public WebSocket(string url, string subprotocol, Dictionary<string, string> headers = null)
+        {
+            uri = new Uri(url);
+
+            if (headers == null)
+            {
+                this.headers = new Dictionary<string, string>();
+            }
+            else
+            {
+                this.headers = headers;
+            }
+
+            subprotocols = new List<string> {subprotocol};
+
+            string protocol = uri.Scheme;
+            if (!protocol.Equals("ws") && !protocol.Equals("wss"))
+                throw new ArgumentException("Unsupported protocol: " + protocol);
+        }
+
+        public WebSocket(string url, List<string> subprotocols, Dictionary<string, string> headers = null)
+        {
+            uri = new Uri(url);
+
+            if (headers == null)
+            {
+                this.headers = new Dictionary<string, string>();
+            }
+            else
+            {
+                this.headers = headers;
+            }
+
+            this.subprotocols = subprotocols;
+
             string protocol = uri.Scheme;
             if (!protocol.Equals("ws") && !protocol.Equals("wss"))
                 throw new ArgumentException("Unsupported protocol: " + protocol);
@@ -390,6 +461,10 @@ namespace NativeWebSocket
                 foreach (var header in headers)
                 {
                     m_Socket.Options.SetRequestHeader(header.Key, header.Value);
+                }
+
+                foreach (string subprotocol in subprotocols) {
+                    m_Socket.Options.AddSubProtocol(subprotocol);
                 }
 
                 await m_Socket.ConnectAsync(uri, m_CancellationToken);
@@ -651,6 +726,9 @@ namespace NativeWebSocket
     /* WebSocket JSLIB callback setters and other functions */
     [DllImport ("__Internal")]
     public static extern int WebSocketAllocate (string url);
+
+    [DllImport ("__Internal")]
+    public static extern int WebSocketAddSubProtocol (int instanceId, string subprotocol);
 
     [DllImport ("__Internal")]
     public static extern void WebSocketFree (int instanceId);
