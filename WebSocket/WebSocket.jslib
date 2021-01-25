@@ -142,7 +142,7 @@ var LibraryWebSocket = {
 		var id = webSocketState.lastId++;
 
 		webSocketState.instances[id] = {
-		  subprotocols: [],
+			subprotocols: [],
 			url: urlStr,
 			ws: null
 		};
@@ -163,6 +163,19 @@ var LibraryWebSocket = {
     webSocketState.instances[instanceId].subprotocols.push(subprotocolStr);
 
   },
+
+	/**
+	* Add subprotocol to instance
+	*
+	* @param instanceId Instance ID
+	* @param subprotocol Subprotocol name to add to instance
+	*/
+	WebSocketAddSubProtocol: function (instanceId, subprotocol) {
+		
+		var subprotocolStr = Pointer_stringify(subprotocol);
+		webSocketState.instances[instanceId].subprotocols.push(subprotocolStr);
+
+	},
 
 	/**
 	 * Remove reference to WebSocket instance
