@@ -268,6 +268,34 @@ namespace NativeWebSocket
       this.instanceId = instanceId;
     }
 
+    public WebSocket (string url, string subprotocol, Dictionary<string, string> headers = null) {
+      if (!WebSocketFactory.isInitialized) {
+        WebSocketFactory.Initialize ();
+      }
+
+      int instanceId = WebSocketFactory.WebSocketAllocate (url);
+      WebSocketFactory.instances.Add (instanceId, this);
+
+      WebSocketFactory.WebSocketAddSubProtocol(instanceId, subprotocol);
+
+      this.instanceId = instanceId;
+    }
+
+    public WebSocket (string url, List<string> subprotocols, Dictionary<string, string> headers = null) {
+      if (!WebSocketFactory.isInitialized) {
+        WebSocketFactory.Initialize ();
+      }
+
+      int instanceId = WebSocketFactory.WebSocketAllocate (url);
+      WebSocketFactory.instances.Add (instanceId, this);
+
+      foreach (string subprotocol in subprotocols) {
+        WebSocketFactory.WebSocketAddSubProtocol(instanceId, subprotocol);
+      }
+
+      this.instanceId = instanceId;
+    }
+
     ~WebSocket () {
       WebSocketFactory.HandleInstanceDestroy (this.instanceId);
     }
