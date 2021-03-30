@@ -620,14 +620,23 @@ namespace NativeWebSocket
         {
             // lock mutex, copy queue content and clear the queue.
             m_MessageListMutex.WaitOne();
-            List<byte[]> messageListCopy = new List<byte[]>();
-            messageListCopy.AddRange(m_MessageList);
+			if (m_MessageList.Count == 0)
+			{
+				// if there's no messages, do nothing - stops creating
+				// a new list where it's not necessary
+				m_MessageListMutex.ReleaseMutex();
+				return;
+			}
+			
+            List<byte[]> messageListCopy = new List<byte[]>(m_MessageList);
             m_MessageList.Clear();
             // release mutex to allow the websocket to add new messages
             m_MessageListMutex.ReleaseMutex();
 
-            foreach (byte[] bytes in messageListCopy)
+			int len = messageListCopy.Count;
+			for (int i = 0; i < len; i++)
             {
+				byte[] bytes = messageListCopy[i];
                 OnMessage?.Invoke(bytes);
             }
         }
