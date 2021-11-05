@@ -137,7 +137,7 @@ var LibraryWebSocket = {
 	 */
 	WebSocketAllocate: function(url) {
 
-		var urlStr = Pointer_stringify(url);
+		var urlStr = UTF8ToString(url);
 		var id = webSocketState.lastId++;
 
 		webSocketState.instances[id] = {
@@ -158,7 +158,7 @@ var LibraryWebSocket = {
    */
   WebSocketAddSubProtocol: function(instanceId, subprotocol) {
 
-    var subprotocolStr = Pointer_stringify(subprotocol);
+    var subprotocolStr = UTF8ToString(subprotocol);
     webSocketState.instances[instanceId].subprotocols.push(subprotocolStr);
 
   },
@@ -311,7 +311,7 @@ var LibraryWebSocket = {
 		if (instance.ws.readyState === 3)
 			return -5;
 
-		var reason = ( reasonPtr ? Pointer_stringify(reasonPtr) : undefined );
+		var reason = ( reasonPtr ? UTF8ToString(reasonPtr) : undefined );
 
 		try {
 			instance.ws.close(code, reason);
@@ -365,7 +365,7 @@ var LibraryWebSocket = {
 		if (instance.ws.readyState !== 1)
 			return -6;
 
-		instance.ws.send(Pointer_stringify(message));
+		instance.ws.send(UTF8ToString(message));
 
 		return 0;
 
