@@ -61,7 +61,6 @@ if (typeof TextEncoder === "undefined") {
 }
 
 var LibraryWebSocket = {
-  $textEncoder: new TextEncoder(),
 	$webSocketState: {
 		/*
 		 * Map of instances
@@ -238,7 +237,7 @@ var LibraryWebSocket = {
 				}
 
       } else {
-				var dataBuffer = textEncoder.encode(ev.data);
+				var dataBuffer = (new TextEncoder()).encode(ev.data);
 
 				var buffer = _malloc(dataBuffer.length);
 				HEAPU8.set(dataBuffer, buffer);
@@ -392,5 +391,4 @@ var LibraryWebSocket = {
 };
 
 autoAddDeps(LibraryWebSocket, '$webSocketState');
-autoAddDeps(LibraryWebSocket, '$textEncoder');
 mergeInto(LibraryManager.library, LibraryWebSocket);
