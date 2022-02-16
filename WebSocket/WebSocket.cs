@@ -239,7 +239,7 @@ namespace NativeWebSocket
 
       this.instanceId = instanceId;
     }
-    
+
     public WebSocket (string url, string subprotocol, Dictionary<string, string> headers = null) {
       if (!WebSocketFactory.isInitialized) {
         WebSocketFactory.Initialize ();
