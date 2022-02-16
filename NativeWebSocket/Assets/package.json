@@ -25,6 +25,6 @@
   {
       "displayName": "Example",
       "description": "WebSocket Example",
-      "path": "WebSocketExample"
+      "path": "Samples~/WebSocketExample"
   } ]
 }
