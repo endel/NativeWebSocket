@@ -7,7 +7,7 @@ This is the simplest and easiest WebSocket library for Unity you can find!
 - Supports all major build targets
 - Very simple API
 
-### Consider supporting my work on [Patreon](https://patreon.com/endel)
+### Consider supporting my work on [Patreon](https://patreon.com/endel) | [Ko-fi](https://ko-fi.com/endeld) | [PayPal](https://www.paypal.me/endeld)
 
 [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dendel%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/endel)
 
