@@ -1,0 +1,98 @@
+name: Update Unity UPM semantic versioning
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  checkSemver:
+    name: Check for Semver Change
+    runs-on: ubuntu-latest
+    outputs:
+      semver-updated: ${{ steps.check.outputs.changed }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+      - uses: EndBug/version-check@v1
+        id: check
+        with:
+          file-name: NativeWebSocket/Assets/package.json
+          diff-search: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Log when changed
+        if: steps.check.outputs.changed == 'true'
+        run: 'echo "Version change found in commit ${{ steps.check.outputs.commit }}! New version: ${{ steps.check.outputs.version }} (${{ steps.check.outputs.type }})"'
+  updateUPM:
+    name: Update UPM branch
+    runs-on: ubuntu-latest
+    needs: [checkSemver]
+    if: needs.checkSemver.outputs.semver-updated == 'true'
+    steps:
+      # Copy correct directory into upm branch
+      - uses: actions/checkout@v2
+
+      - name: Push package directory to subtree
+        uses: s0/git-publish-subdir-action@develop
+        env:
+          REPO: self
+          BRANCH: upm
+          FOLDER: NativeWebSocket/Assets/
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  createPackage:
+    name: Create Unity Package and Release
+    runs-on: ubuntu-latest
+    needs: [checkSemver]
+    if: needs.checkSemver.outputs.semver-updated == 'true'
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v2
+    - name: Gather files
+      run: |
+        echo "NativeWebSocket/Assets/WebSocket.meta" > metaList
+        find NativeWebSocket/Assets/WebSocket/ -name \*.meta >> metaList
+    - name: Extract Version
+      id: version
+      uses: notiz-dev/github-action-json-property@release
+      with:
+          path: 'NativeWebSocket/Assets/package.json'
+          prop_path: 'version'
+    - run: echo ${{steps.version.outputs.prop}}
+    - name: Create Directory
+      run: mkdir Release
+    - name: Generate Unity Package
+      id: build-package
+      uses: pCYSl5EDgo/create-unitypackage@master
+      with:
+        package-path: 'NativeWebSocket.unitypackage'
+        include-files: metaList
+    - name: Upload Package
+      uses: actions/upload-artifact@master
+      with:
+        path: ./NativeWebSocket.unitypackage
+        name: NativeWebSocket
+    - name: Changelog
+      uses: scottbrenner/generate-changelog-action@master
+      id: Changelog
+    - name: Create Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.version.outputs.prop }}
+        release_name: ${{ steps.version.outputs.prop }}
+        body: |
+            ${{ steps.Changelog.outputs.changelog }}
+        draft: false
+        prerelease: true
+    - name: Upload Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+        asset_path: ./NativeWebSocket.unitypackage
+        asset_name: NativeWebSocket.unitypackage
+        asset_content_type: application/x-gzip
