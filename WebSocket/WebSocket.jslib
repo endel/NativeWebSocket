@@ -199,9 +199,9 @@ var LibraryWebSocket = {
 			if (webSocketState.onError) {
 
 				var msg = "WebSocket error.";
-				var msgBytes = lengthBytesUTF8(msg);
-				var msgBuffer = _malloc(msgBytes + 1);
-				stringToUTF8(msg, msgBuffer, msgBytes);
+				var length = lengthBytesUTF8(msg) + 1;
+				var buffer = _malloc(length);
+				stringToUTF8(msg, buffer, length);
 
 				try {
 					Module.dynCall_vii(webSocketState.onError, instanceId, msgBuffer);
