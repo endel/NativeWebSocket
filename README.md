@@ -7,9 +7,9 @@ This is the simplest and easiest WebSocket library for Unity you can find!
 - Supports all major build targets
 - Very simple API
 
-> This WebSocket client is used on [colyseus-unity3d](https://github.com/colyseus/colyseus-unity3d). <br />
-> Consider supporting my work on [Patreon](https://patreon.com/endel). <br />
-> [![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dendel%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/endel)
+### Consider supporting my work on [Patreon](https://patreon.com/endel)
+
+[![Support me on Patreon](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-patreon.vercel.app%2Fapi%3Fusername%3Dendel%26type%3Dpatrons&style=for-the-badge)](https://patreon.com/endel)
 
 ## Installation
 
