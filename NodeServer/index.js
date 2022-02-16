@@ -4,6 +4,7 @@ const { createServer } = require('http');
 const WebSocket = require('ws');
 
 const app = express();
+const port = 3000;
 
 const server = createServer(app);
 const wss = new WebSocket.Server({ server });
@@ -34,6 +35,6 @@ wss.on('connection', function(ws) {
   });
 });
 
-server.listen(8080, function() {
-  console.log('Listening on http://localhost:8080');
+server.listen(port, function() {
+  console.log(`Listening on http://localhost:${port}`);
 });
