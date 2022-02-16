@@ -13,7 +13,7 @@ public class Connection : MonoBehaviour
   async void Start()
   {
     // websocket = new WebSocket("ws://echo.websocket.org");
-    websocket = new WebSocket("ws://localhost:8080");
+    websocket = new WebSocket("ws://localhost:3000");
 
     websocket.OnOpen += () =>
     {
