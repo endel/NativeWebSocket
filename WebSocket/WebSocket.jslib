@@ -204,9 +204,9 @@ var LibraryWebSocket = {
 				stringToUTF8(msg, buffer, length);
 
 				try {
-					Module.dynCall_vii(webSocketState.onError, instanceId, msgBuffer);
+					Module.dynCall_vii(webSocketState.onError, instanceId, buffer);
 				} finally {
-					_free(msgBuffer);
+					_free(buffer);
 				}
 
 			}
