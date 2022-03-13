@@ -12,6 +12,16 @@ public class Connection : MonoBehaviour
   // Start is called before the first frame update
   async void Start()
   {
+    //WebSocketOptions example.
+    //WebSocketOptions options = new WebSocketOptions();
+    //options.uri = new Uri("ws://localhost:3000");
+    //options.keepAliveInterval = TimeSpan.FromSeconds(1);
+    //headers...
+    //subprotocols...
+    //Credentials...
+
+    //websocket = new WebSocket(options);
+
     // websocket = new WebSocket("ws://echo.websocket.org");
     websocket = new WebSocket("ws://localhost:3000");
 
