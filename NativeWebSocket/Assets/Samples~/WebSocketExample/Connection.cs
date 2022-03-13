@@ -14,8 +14,8 @@ public class Connection : MonoBehaviour
   {
     //WebSocketOptions example.
     //WebSocketOptions options = new WebSocketOptions();
-    //options.uri = new Uri("ws://localhost:3000");
-    //options.keepAliveInterval = TimeSpan.FromSeconds(1);
+    //options.url = "ws://localhost:3000";
+    //options.keepAliveInterval = TimeSpan.FromSeconds(10); //Ping Interval.
     //headers...
     //subprotocols...
     //Credentials...

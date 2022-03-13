@@ -199,6 +199,15 @@ namespace NativeWebSocket
         }
     }
 
+    public class WebSocketOptions
+    {
+        public string url = "ws://localhost:3000";
+        public Dictionary<string, string> headers = new Dictionary<string, string>();
+        public List<string> subprotocols = new List<string>();
+        public TimeSpan keepAliveInterval = TimeSpan.FromSeconds(30); //Ping interval
+        //Credentials...
+    }
+
 #if UNITY_WEBGL && !UNITY_EDITOR
 
   /// <summary>
@@ -229,43 +238,35 @@ namespace NativeWebSocket
     public event WebSocketErrorEventHandler OnError;
     public event WebSocketCloseEventHandler OnClose;
 
-    public WebSocket (string url, Dictionary<string, string> headers = null) {
-      if (!WebSocketFactory.isInitialized) {
-        WebSocketFactory.Initialize ();
-      }
-
-      int instanceId = WebSocketFactory.WebSocketAllocate (url);
-      WebSocketFactory.instances.Add (instanceId, this);
-
-      this.instanceId = instanceId;
+    public WebSocket(string url)
+    {
+        WebSocketOptions options = new WebSocketOptions();
+        options.url = url;
+        setWebSocketOptions(options);
     }
 
-    public WebSocket (string url, string subprotocol, Dictionary<string, string> headers = null) {
-      if (!WebSocketFactory.isInitialized) {
-        WebSocketFactory.Initialize ();
-      }
-
-      int instanceId = WebSocketFactory.WebSocketAllocate (url);
-      WebSocketFactory.instances.Add (instanceId, this);
-
-      WebSocketFactory.WebSocketAddSubProtocol(instanceId, subprotocol);
-
-      this.instanceId = instanceId;
+    public WebSocket(WebSocketOptions options)
+    {
+        setWebSocketOptions(options);
     }
 
-    public WebSocket (string url, List<string> subprotocols, Dictionary<string, string> headers = null) {
-      if (!WebSocketFactory.isInitialized) {
+    public void setWebSocketOptions(WebSocketOptions options) 
+    {
+        if (!WebSocketFactory.isInitialized) {
         WebSocketFactory.Initialize ();
-      }
+        }
 
-      int instanceId = WebSocketFactory.WebSocketAllocate (url);
-      WebSocketFactory.instances.Add (instanceId, this);
+        int instanceId = WebSocketFactory.WebSocketAllocate (options.url);
+        WebSocketFactory.instances.Add (instanceId, this);
 
-      foreach (string subprotocol in subprotocols) {
-        WebSocketFactory.WebSocketAddSubProtocol(instanceId, subprotocol);
-      }
+        foreach (string subprotocol in options.subprotocols) {
+            WebSocketFactory.WebSocketAddSubProtocol(instanceId, subprotocol);
+        }
 
-      this.instanceId = instanceId;
+        //headers?????
+        //creditentials...
+
+        this.instanceId = instanceId;
     }
 
     ~WebSocket () {
@@ -363,15 +364,6 @@ namespace NativeWebSocket
 
 #else
 
-    public class WebSocketOptions
-    {
-        public Uri uri = new Uri("ws://localhost:3000");
-        public Dictionary<string, string> headers = new Dictionary<string, string>();
-        public List<string> subprotocols = new List<string>();
-        public TimeSpan keepAliveInterval = TimeSpan.FromSeconds(30); //Ping interval
-        //Credentials...
-    }
-
     public class WebSocket : IWebSocket
     {
         public event WebSocketOpenEventHandler OnOpen;
@@ -399,7 +391,7 @@ namespace NativeWebSocket
         public WebSocket(string url)
         {
             WebSocketOptions options = new WebSocketOptions();
-            options.uri = new Uri(url);
+            options.url = url;
             setWebSocketOptions(options);
         }
 
@@ -410,7 +402,7 @@ namespace NativeWebSocket
 
         public void setWebSocketOptions(WebSocketOptions options)
         {
-            uri = options.uri;
+            uri = new Uri(options.url);
             headers = options.headers;
             subprotocols = options.subprotocols;
             keepAliveInterval = options.keepAliveInterval;
