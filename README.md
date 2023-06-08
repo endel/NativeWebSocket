@@ -6,6 +6,7 @@ This is the simplest and easiest WebSocket library for Unity you can find!
 - WebGL/HTML5 support
 - Supports all major build targets
 - Very simple API
+- (Used in [Colyseus Unity SDK](https://github.com/colyseus/colyseus-unity-sdk))
 
 ### Consider supporting my work on [Patreon](https://patreon.com/endel) | [Ko-fi](https://ko-fi.com/endeld) | [PayPal](https://www.paypal.me/endeld)
 
