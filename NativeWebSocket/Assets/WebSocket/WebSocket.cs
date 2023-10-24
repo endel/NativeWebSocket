@@ -566,7 +566,7 @@ namespace NativeWebSocket
                 {
                     // Send the message synchronously.
                     var t = m_Socket.SendAsync(buffer, messageType, true, m_CancellationToken);
-                    t.Wait(m_CancellationToken);
+                    await Task.WhenAny(t, Task.Delay(TimeSpan.FromMilliseconds(-1), m_CancellationToken));
                 }
                 finally
                 {
