@@ -458,7 +458,8 @@ namespace NativeWebSocket
                 m_CancellationToken = m_TokenSource.Token;
 
                 m_Socket = new ClientWebSocket();
-
+                m_Socket.Options.KeepAliveInterval = TimeSpan.Zero;
+                
                 foreach (var header in headers)
                 {
                     m_Socket.Options.SetRequestHeader(header.Key, header.Value);
@@ -673,6 +674,7 @@ namespace NativeWebSocket
                             //	string message = reader.ReadToEnd();
                             //	OnMessage?.Invoke(this, new MessageEventArgs(message));
                             //}
+                            DispatchMessageQueue();
                         }
                         else if (result.MessageType == WebSocketMessageType.Binary)
                         {
@@ -680,6 +682,7 @@ namespace NativeWebSocket
                             {
                               m_MessageList.Add(ms.ToArray());
                             }
+                            DispatchMessageQueue();
                         }
                         else if (result.MessageType == WebSocketMessageType.Close)
                         {
