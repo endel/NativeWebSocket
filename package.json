@@ -1,6 +1,6 @@
 {
   "name": "com.endel.nativewebsocket",
-  "version": "1.1.4",
+  "version": "1.1.5",
   "description": "WebSocket client for Unity - with no external dependencies (WebGL, Native, Android, iOS, UWP).",
   "license": "Apache 2.0",
   "repository": {
