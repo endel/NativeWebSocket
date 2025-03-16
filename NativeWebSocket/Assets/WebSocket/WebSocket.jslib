@@ -17,7 +17,7 @@ var LibraryWebSocket = {
 
 		/* Event listeners */
 		onOpen: null,
-		onMesssage: null,
+		onMessage: null,
 		onError: null,
 		onClose: null,
 
