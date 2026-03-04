@@ -150,7 +150,7 @@ var LibraryWebSocket = {
 				console.log("[JSLIB WebSocket] Connected.");
 
 			if (webSocketState.onOpen) {
-				if (typeof dynCall !== 'undefined')
+				if (typeof Module.dynCall_vi !== 'undefined')
 					Module.dynCall_vi(webSocketState.onOpen, instanceId);
 				else
 					{{{ makeDynCall('vi', 'webSocketState.onOpen') }}}(instanceId);
@@ -174,7 +174,7 @@ var LibraryWebSocket = {
 				HEAPU8.set(dataBuffer, buffer);
 
 				try {
-					if (typeof dynCall !== 'undefined')
+					if (typeof Module.dynCall_viii !== 'undefined')
 						Module.dynCall_viii(webSocketState.onMessage, instanceId, buffer, dataBuffer.length);
 					else
 						{{{ makeDynCall('viii', 'webSocketState.onMessage') }}}(instanceId, buffer, dataBuffer.length);
@@ -189,7 +189,7 @@ var LibraryWebSocket = {
 				HEAPU8.set(dataBuffer, buffer);
 
 				try {
-					if (typeof dynCall !== 'undefined')
+					if (typeof Module.dynCall_viii !== 'undefined')
 						Module.dynCall_viii(webSocketState.onMessage, instanceId, buffer, dataBuffer.length);
 					else
 						{{{ makeDynCall('viii', 'webSocketState.onMessage') }}}(instanceId, buffer, dataBuffer.length);
@@ -214,7 +214,7 @@ var LibraryWebSocket = {
 				stringToUTF8(msg, buffer, length);
 
 				try {
-					if (typeof dynCall !== 'undefined')
+					if (typeof Module.dynCall_vii !== 'undefined')
 						Module.dynCall_vii(webSocketState.onError, instanceId, buffer);
 					else
 						{{{ makeDynCall('vii', 'webSocketState.onError') }}}(instanceId, buffer);
@@ -232,7 +232,7 @@ var LibraryWebSocket = {
 				console.log("[JSLIB WebSocket] Closed.");
 
 			if (webSocketState.onClose) {
-				if (typeof dynCall !== 'undefined')
+				if (typeof Module.dynCall_vii !== 'undefined')
 					Module.dynCall_vii(webSocketState.onClose, instanceId, ev.code);
 				else
 					{{{ makeDynCall('vii', 'webSocketState.onClose') }}}(instanceId, ev.code);
