@@ -30,7 +30,7 @@ jobs:
     name: Publish to NuGet
     runs-on: ubuntu-latest
     needs: [build]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    # TODO: revert to: if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
         with:
@@ -57,13 +57,13 @@ jobs:
           fi
 
       - name: Pack NativeWebSocket
-        if: steps.version.outputs.changed == 'true'
+        # TODO: revert to: if: steps.version.outputs.changed == 'true'
         run: dotnet pack src/NativeWebSocket/NativeWebSocket.csproj -c Release -o packages/
 
       - name: Pack NativeWebSocket.MonoGame
-        if: steps.version.outputs.changed == 'true'
+        # TODO: revert to: if: steps.version.outputs.changed == 'true'
         run: dotnet pack integrations/MonoGame/NativeWebSocket.MonoGame.csproj -c Release -o packages/
 
       - name: Publish to NuGet
-        if: steps.version.outputs.changed == 'true'
+        # TODO: revert to: if: steps.version.outputs.changed == 'true'
         run: dotnet nuget push packages/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
