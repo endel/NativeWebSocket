@@ -1,0 +1,69 @@
+name: NuGet Publish
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore src/NativeWebSocket/NativeWebSocket.csproj
+
+      - name: Build
+        run: dotnet build src/NativeWebSocket/NativeWebSocket.csproj -c Release --no-restore
+
+  publish:
+    name: Publish to NuGet
+    runs-on: ubuntu-latest
+    needs: [build]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Check for version change
+        id: version
+        run: |
+          CURRENT=$(grep '<Version>' src/NativeWebSocket/NativeWebSocket.csproj | sed 's/.*<Version>\(.*\)<\/Version>.*/\1/')
+          PREVIOUS=$(git show HEAD~1:src/NativeWebSocket/NativeWebSocket.csproj 2>/dev/null | grep '<Version>' | sed 's/.*<Version>\(.*\)<\/Version>.*/\1/' || echo "")
+          echo "current=$CURRENT" >> $GITHUB_OUTPUT
+          echo "previous=$PREVIOUS" >> $GITHUB_OUTPUT
+          if [ "$CURRENT" != "$PREVIOUS" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Version changed: $PREVIOUS -> $CURRENT"
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "Version unchanged: $CURRENT"
+          fi
+
+      - name: Pack NativeWebSocket
+        if: steps.version.outputs.changed == 'true'
+        run: dotnet pack src/NativeWebSocket/NativeWebSocket.csproj -c Release -o packages/
+
+      - name: Pack NativeWebSocket.MonoGame
+        if: steps.version.outputs.changed == 'true'
+        run: dotnet pack integrations/MonoGame/NativeWebSocket.MonoGame.csproj -c Release -o packages/
+
+      - name: Publish to NuGet
+        if: steps.version.outputs.changed == 'true'
+        run: dotnet nuget push packages/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
