@@ -174,8 +174,9 @@ jobs:
 
     - name: Gather meta files
       run: |
-        find upm-package/ -name '*.meta' > metaList
-        cat metaList
+        cd upm-package
+        find . -name '*.meta' | sed 's|^\./||' > ../metaList
+        cat ../metaList
 
     - name: Extract Version
       id: version
