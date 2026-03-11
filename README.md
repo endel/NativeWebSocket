@@ -16,15 +16,20 @@ Used in [Colyseus Unity SDK](https://github.com/colyseus/colyseus-unity-sdk).
 
 *Requires Unity 2019.1+ with .NET 4.x+ Runtime*
 
+> **Note:** Do not copy the raw source files from this repository directly into
+> your Unity project. The core `WebSocket.cs` requires a build-time
+> transformation to add WebGL conditional compilation guards. Use one of the
+> install methods below instead.
+
 **Via UPM (Unity Package Manager):**
 1. Open Unity
 2. Open Package Manager Window
 3. Click Add Package From Git URL
-4. Enter URL: `https://github.com/endel/NativeWebSocket.git#upm`
+4. Enter URL: `https://github.com/endel/NativeWebSocket.git#upm-2.0`
 
-**Manually:**
-1. [Download this project](https://github.com/endel/NativeWebSocket/archive/master.zip)
-2. Copy the sources from `NativeWebSocket/Assets/WebSocket` into your `Assets` directory.
+**Via .unitypackage:**
+1. Download `NativeWebSocket.unitypackage` from the [Releases](https://github.com/endel/NativeWebSocket/releases) page
+2. In Unity, go to Assets > Import Package > Custom Package and select the downloaded file
 
 ## MonoGame / .NET
 
@@ -60,6 +65,8 @@ public class Connection : MonoBehaviour
 
     async void Start()
     {
+        Application.runInBackground = true; // Recommended for WebGL
+
         websocket = new WebSocket("ws://localhost:3000");
 
         websocket.OnOpen += () => Debug.Log("Connection open!");
@@ -92,6 +99,11 @@ public class Connection : MonoBehaviour
     }
 }
 ```
+
+**WebGL note:** Unity pauses the game loop when the browser tab loses focus, which
+stops all WebSocket send/receive callbacks. To keep the connection active in the
+background, set `Application.runInBackground = true` in your script or enable
+**Run In Background** in Player Settings > Resolution and Presentation.
 
 ## MonoGame
 

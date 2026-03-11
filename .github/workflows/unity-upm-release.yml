@@ -43,9 +43,10 @@ jobs:
           cp src/NativeWebSocket/IWebSocket.cs upm-package/WebSocket/
           cp src/NativeWebSocket/WebSocketTypes.cs upm-package/WebSocket/
 
-          # Unity-specific files (WebSocket.cs has #if !UNITY_WEBGL guard,
-          # WebSocketWebGL.cs + WebSocketFactoryWebGL.cs have #if UNITY_WEBGL guard)
-          cp integrations/Unity/WebSocket.cs upm-package/WebSocket/
+          # Wrap core WebSocket.cs with Unity conditional compilation guard
+          { echo '#if !UNITY_WEBGL || UNITY_EDITOR'; echo ''; cat src/NativeWebSocket/WebSocket.cs; echo ''; echo '#endif'; } > upm-package/WebSocket/WebSocket.cs
+
+          # Unity-specific files (WebGL platform support)
           cp integrations/Unity/WebSocketWebGL.cs upm-package/WebSocket/
           cp integrations/Unity/WebSocketFactoryWebGL.cs upm-package/WebSocket/
           cp integrations/Unity/WebSocket.jslib upm-package/WebSocket/
@@ -81,8 +82,10 @@ jobs:
         cp src/NativeWebSocket/IWebSocket.cs upm-package/Assets/WebSocket/
         cp src/NativeWebSocket/WebSocketTypes.cs upm-package/Assets/WebSocket/
 
+        # Wrap core WebSocket.cs with Unity conditional compilation guard
+        { echo '#if !UNITY_WEBGL || UNITY_EDITOR'; echo ''; cat src/NativeWebSocket/WebSocket.cs; echo ''; echo '#endif'; } > upm-package/Assets/WebSocket/WebSocket.cs
+
         # Unity-specific files
-        cp integrations/Unity/WebSocket.cs upm-package/Assets/WebSocket/
         cp integrations/Unity/WebSocketWebGL.cs upm-package/Assets/WebSocket/
         cp integrations/Unity/WebSocketFactoryWebGL.cs upm-package/Assets/WebSocket/
         cp integrations/Unity/WebSocket.jslib upm-package/Assets/WebSocket/

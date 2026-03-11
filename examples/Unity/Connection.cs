@@ -25,6 +25,8 @@ public class Connection : MonoBehaviour
 
     async void Start()
     {
+        Application.runInBackground = true;
+
         websocket = new WebSocket("ws://localhost:3000");
 
         websocket.OnOpen += () =>
