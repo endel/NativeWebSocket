@@ -1,0 +1,31 @@
+{
+  "name": "com.endel.nativewebsocket",
+  "version": "2.0.0",
+  "description": "WebSocket client for Unity - with no external dependencies (WebGL, Native, Android, iOS, UWP). Events auto-dispatch to the main thread via SynchronizationContext.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/endel/NativeWebSocket.git"
+  },
+  "author": {
+    "name": "Endel Dreyer",
+    "email": "endel.dreyer@gmail.com",
+    "url": "https://github.com/endel/NativeWebSocket"
+  },
+  "keywords": [
+    "websocket",
+    "websockets",
+    "native websocket",
+    "native websockets"
+  ],
+  "displayName": "Native WebSockets",
+  "unity": "2019.1",
+  "dependencies": {},
+  "samples": [
+    {
+      "displayName": "Example",
+      "description": "WebSocket Example",
+      "path": "Samples~/WebSocketExample"
+    }
+  ]
+}
