@@ -75,22 +75,22 @@ jobs:
 
     - name: Assemble package directory
       run: |
-        mkdir -p upm-package/WebSocket
+        mkdir -p upm-package/Assets/WebSocket
 
         # Core library files
-        cp src/NativeWebSocket/IWebSocket.cs upm-package/WebSocket/
-        cp src/NativeWebSocket/WebSocketTypes.cs upm-package/WebSocket/
+        cp src/NativeWebSocket/IWebSocket.cs upm-package/Assets/WebSocket/
+        cp src/NativeWebSocket/WebSocketTypes.cs upm-package/Assets/WebSocket/
 
         # Unity-specific files
-        cp integrations/Unity/WebSocket.cs upm-package/WebSocket/
-        cp integrations/Unity/WebSocketWebGL.cs upm-package/WebSocket/
-        cp integrations/Unity/WebSocketFactoryWebGL.cs upm-package/WebSocket/
-        cp integrations/Unity/WebSocket.jslib upm-package/WebSocket/
-        cp integrations/Unity/WebSocket.jspre upm-package/WebSocket/
-        cp integrations/Unity/endel.nativewebsocket.asmdef upm-package/WebSocket/
+        cp integrations/Unity/WebSocket.cs upm-package/Assets/WebSocket/
+        cp integrations/Unity/WebSocketWebGL.cs upm-package/Assets/WebSocket/
+        cp integrations/Unity/WebSocketFactoryWebGL.cs upm-package/Assets/WebSocket/
+        cp integrations/Unity/WebSocket.jslib upm-package/Assets/WebSocket/
+        cp integrations/Unity/WebSocket.jspre upm-package/Assets/WebSocket/
+        cp integrations/Unity/endel.nativewebsocket.asmdef upm-package/Assets/WebSocket/
 
         # Package metadata
-        cp integrations/Unity/package.json upm-package/
+        cp integrations/Unity/package.json upm-package/Assets/
 
     - name: Generate .meta files
       run: |
@@ -103,7 +103,7 @@ jobs:
 
           case "$ext" in
             cs)
-              cat > "$meta" <<EOF
+              cat > "$meta" <<ENDMETA
         fileFormatVersion: 2
         guid: ${guid}
         MonoImporter:
@@ -111,10 +111,10 @@ jobs:
           defaultReferences: []
           executionOrder: 0
           icon: {instanceID: 0}
-        EOF
+        ENDMETA
               ;;
             jslib|jspre)
-              cat > "$meta" <<EOF
+              cat > "$meta" <<ENDMETA
         fileFormatVersion: 2
         guid: ${guid}
         PluginImporter:
@@ -135,10 +135,10 @@ jobs:
           userData:
           assetBundleName:
           assetBundleVariant:
-        EOF
+        ENDMETA
               ;;
             *)
-              cat > "$meta" <<EOF
+              cat > "$meta" <<ENDMETA
         fileFormatVersion: 2
         guid: ${guid}
         DefaultImporter:
@@ -146,14 +146,14 @@ jobs:
           userData:
           assetBundleName:
           assetBundleVariant:
-        EOF
+        ENDMETA
               ;;
           esac
         }
 
         # Generate .meta for the WebSocket folder
-        folder_guid=$(echo -n "upm-package/WebSocket" | md5sum | cut -c1-32)
-        cat > upm-package/WebSocket.meta <<EOF
+        folder_guid=$(echo -n "Assets/WebSocket" | md5sum | cut -c1-32)
+        cat > upm-package/Assets/WebSocket.meta <<ENDMETA
         fileFormatVersion: 2
         guid: ${folder_guid}
         folderAsset: yes
@@ -162,20 +162,20 @@ jobs:
           userData:
           assetBundleName:
           assetBundleVariant:
-        EOF
+        ENDMETA
 
         # Generate .meta for package.json
-        generate_meta "upm-package/package.json"
+        generate_meta "upm-package/Assets/package.json"
 
         # Generate .meta for each file in WebSocket/
-        for f in upm-package/WebSocket/*; do
+        for f in upm-package/Assets/WebSocket/*; do
           generate_meta "$f"
         done
 
     - name: Gather meta files
       run: |
         cd upm-package
-        find . -name '*.meta' | sed 's|^\./||' > ../metaList
+        find Assets -name '*.meta' > ../metaList
         cat ../metaList
 
     - name: Extract Version
