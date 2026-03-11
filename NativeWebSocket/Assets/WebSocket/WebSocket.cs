@@ -663,9 +663,10 @@ namespace NativeWebSocket
 
                         if (result.MessageType == WebSocketMessageType.Text)
                         {
+                            byte[] arr = ms.ToArray();
                             lock (IncomingMessageLock)
                             {
-                              m_MessageList.Add(ms.ToArray());
+                              m_MessageList.Add(arr);
                             }
 
                             //using (var reader = new StreamReader(ms, Encoding.UTF8))
@@ -676,9 +677,10 @@ namespace NativeWebSocket
                         }
                         else if (result.MessageType == WebSocketMessageType.Binary)
                         {
+                            byte[] arr = ms.ToArray();
                             lock (IncomingMessageLock)
                             {
-                              m_MessageList.Add(ms.ToArray());
+                              m_MessageList.Add(arr);
                             }
                         }
                         else if (result.MessageType == WebSocketMessageType.Close)
