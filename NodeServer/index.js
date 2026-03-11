@@ -1,13 +1,13 @@
-const crypto = require('crypto');
-const express = require('express');
-const { createServer } = require('http');
-const WebSocket = require('ws');
+import crypto from 'crypto';
+import express from 'express';
+import { createServer } from 'http';
+import { WebSocketServer } from 'ws';
 
 const app = express();
 const port = 3000;
 
 const server = createServer(app);
-const wss = new WebSocket.Server({ server });
+const wss = new WebSocketServer({ server });
 
 wss.on('connection', function(ws) {
   console.log("client joined.");
