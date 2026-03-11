@@ -31,7 +31,6 @@ namespace NativeWebSocket
         private readonly object EventQueueLock = new object();
 
         private readonly object OutgoingMessageLock = new object();
-        private readonly object SocketLock = new object();
         private bool isSending = false;
         private Queue<ArraySegment<byte>> sendBytesQueue = new Queue<ArraySegment<byte>>();
         private Queue<ArraySegment<byte>> sendTextQueue = new Queue<ArraySegment<byte>>();
@@ -89,8 +88,7 @@ namespace NativeWebSocket
 
         /// <summary>
         /// Dispatches queued events when no SynchronizationContext is available.
-        /// Not needed in Unity — UnitySynchronizationContext handles dispatch automatically.
-        /// Kept for backward compatibility.
+        /// Not needed when a SynchronizationContext is present (Unity, Godot, MonoGame with WebSocketGameComponent).
         /// </summary>
         public void DispatchMessageQueue()
         {
@@ -194,7 +192,7 @@ namespace NativeWebSocket
 
         private async Task SendMessage(Queue<ArraySegment<byte>> queue, WebSocketMessageType messageType, ArraySegment<byte> buffer)
         {
-            if (buffer.Count == 0)
+            if (buffer.Count == 0 || State != WebSocketState.Open)
             {
                 return;
             }
@@ -215,20 +213,7 @@ namespace NativeWebSocket
             {
                 try
                 {
-                    if (!Monitor.TryEnter(SocketLock, 1000))
-                    {
-                        await m_Socket.CloseAsync(WebSocketCloseStatus.InternalServerError, string.Empty, m_CancellationToken).ConfigureAwait(false);
-                        return;
-                    }
-
-                    try
-                    {
-                        await m_Socket.SendAsync(buffer, messageType, true, m_CancellationToken).ConfigureAwait(false);
-                    }
-                    finally
-                    {
-                        Monitor.Exit(SocketLock);
-                    }
+                    await m_Socket.SendAsync(buffer, messageType, true, m_CancellationToken).ConfigureAwait(false);
 
                     // Drain the queue iteratively instead of recursively
                     while (true)
@@ -241,20 +226,7 @@ namespace NativeWebSocket
                             next = queue.Dequeue();
                         }
 
-                        if (!Monitor.TryEnter(SocketLock, 1000))
-                        {
-                            await m_Socket.CloseAsync(WebSocketCloseStatus.InternalServerError, string.Empty, m_CancellationToken).ConfigureAwait(false);
-                            return;
-                        }
-
-                        try
-                        {
-                            await m_Socket.SendAsync(next, messageType, true, m_CancellationToken).ConfigureAwait(false);
-                        }
-                        finally
-                        {
-                            Monitor.Exit(SocketLock);
-                        }
+                        await m_Socket.SendAsync(next, messageType, true, m_CancellationToken).ConfigureAwait(false);
                     }
                 }
                 finally
@@ -330,10 +302,10 @@ namespace NativeWebSocket
 
         public async Task Close(WebSocketCloseCode code = WebSocketCloseCode.Normal, string reason = null)
         {
-            if (State == WebSocketState.Open)
-            {
-                await m_Socket.CloseAsync((WebSocketCloseStatus)(int)code, reason ?? string.Empty, m_CancellationToken).ConfigureAwait(false);
-            }
+            if (State != WebSocketState.Open)
+                return;
+
+            await m_Socket.CloseAsync((WebSocketCloseStatus)(int)code, reason ?? string.Empty, CancellationToken.None).ConfigureAwait(false);
         }
     }
 
