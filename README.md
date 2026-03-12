@@ -33,22 +33,15 @@ Used in [Colyseus Unity SDK](https://github.com/colyseus/colyseus-unity-sdk).
 
 ## MonoGame / .NET
 
-Add a project reference to `src/NativeWebSocket/NativeWebSocket.csproj` and
-`integrations/MonoGame/NativeWebSocket.MonoGame.csproj`:
-
 ```bash
-dotnet add reference path/to/NativeWebSocket.csproj
-dotnet add reference path/to/NativeWebSocket.MonoGame.csproj
+dotnet add package Colyseus.NativeWebSocket
+dotnet add package Colyseus.NativeWebSocket.MonoGame
 ```
 
 ## Godot (C#)
 
-Add a project reference to `src/NativeWebSocket/NativeWebSocket.csproj` in your `.csproj`:
-
-```xml
-<ItemGroup>
-  <ProjectReference Include="path/to/NativeWebSocket.csproj" />
-</ItemGroup>
+```bash
+dotnet add package Colyseus.NativeWebSocket
 ```
 
 # Usage
@@ -223,9 +216,9 @@ Full runnable examples are in the [`examples/`](examples/) directory:
 All examples connect to the included test server:
 
 ```bash
-cd NodeServer
+cd node-websocket-server
 npm install
-node index.js
+npm start
 ```
 
 The server listens on `ws://localhost:3000`, sends periodic text and binary
