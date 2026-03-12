@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <RootNamespace>NativeWebSocket.MonoGame</RootNamespace>
+    <AssemblyName>NativeWebSocket.MonoGame</AssemblyName>
+    <Version>2.0.0</Version>
+    <Authors>Endel Dreyer</Authors>
+    <Description>MonoGame integration for NativeWebSocket - provides a GameComponent that enables automatic main-thread event dispatching.</Description>
+    <PackageId>Colyseus.NativeWebSocket.MonoGame</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/endel/NativeWebSocket</RepositoryUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/NativeWebSocket/NativeWebSocket.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

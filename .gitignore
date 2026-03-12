@@ -1,5 +1,7 @@
 .DS_Store
 node_modules
+bin/
+obj/
 
 # This .gitignore file should be placed at the root of your Unity project directory
 #
@@ -34,6 +36,11 @@ ExportedObj/
 *.csproj
 *.unityproj
 *.sln
+
+# Don't ignore project files for the core library and integrations
+!src/**/*.csproj
+!integrations/**/*.csproj
+!NativeWebSocket.sln
 *.suo
 *.tmp
 *.user
@@ -60,3 +67,4 @@ sysinfo.txt
 
 # Crashlytics generated file
 crashlytics-build.properties
+.godot
