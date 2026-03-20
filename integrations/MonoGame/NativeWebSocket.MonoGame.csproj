@@ -3,7 +3,7 @@
     <TargetFramework>net6.0</TargetFramework>
     <RootNamespace>NativeWebSocket.MonoGame</RootNamespace>
     <AssemblyName>NativeWebSocket.MonoGame</AssemblyName>
-    <Version>2.0.0</Version>
+    <Version>2.0.1</Version>
     <Authors>Endel Dreyer</Authors>
     <Description>MonoGame integration for NativeWebSocket - provides a GameComponent that enables automatic main-thread event dispatching.</Description>
     <PackageId>Colyseus.NativeWebSocket.MonoGame</PackageId>

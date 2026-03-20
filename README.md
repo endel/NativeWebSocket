@@ -27,6 +27,8 @@ Used in [Colyseus Unity SDK](https://github.com/colyseus/colyseus-unity-sdk).
 3. Click Add Package From Git URL
 4. Enter URL: `https://github.com/endel/NativeWebSocket.git#upm-2.0`
 
+If you need the old 1.x package instead, use `https://github.com/endel/NativeWebSocket.git#upm-1.x` in UPM, or check out the repository sources from the `1.x` branch.
+
 **Via .unitypackage:**
 1. Download `NativeWebSocket.unitypackage` from the [Releases](https://github.com/endel/NativeWebSocket/releases) page
 2. In Unity, go to Assets > Import Package > Custom Package and select the downloaded file
