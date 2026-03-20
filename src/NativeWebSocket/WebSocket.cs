@@ -28,6 +28,10 @@ namespace NativeWebSocket
         private List<Action> m_DispatchQueue = new List<Action>();
         private readonly object EventQueueLock = new object();
 
+        private List<byte[]> m_MessageQueue = new List<byte[]>();
+        private List<byte[]> m_MessageDispatchQueue = new List<byte[]>();
+        private readonly object MessageQueueLock = new object();
+
         private readonly object OutgoingMessageLock = new object();
         private bool isSending = false;
         private Queue<ArraySegment<byte>> sendBytesQueue = new Queue<ArraySegment<byte>>();
@@ -84,12 +88,46 @@ namespace NativeWebSocket
             }
         }
 
+        private void EnqueueMessage(byte[] data)
+        {
+            if (_syncContext != null)
+            {
+                _syncContext.Post(_ => OnMessage?.Invoke(data), null);
+            }
+            else
+            {
+                lock (MessageQueueLock)
+                {
+                    m_MessageQueue.Add(data);
+                }
+            }
+        }
+
         /// <summary>
         /// Dispatches queued events when no SynchronizationContext is available.
         /// Not needed when a SynchronizationContext is present (Unity, Godot, MonoGame with WebSocketGameComponent).
         /// </summary>
         public void DispatchMessageQueue()
         {
+            // Hot path: dispatch messages without closure overhead
+            if (m_MessageQueue.Count > 0)
+            {
+                lock (MessageQueueLock)
+                {
+                    var tmp = m_MessageDispatchQueue;
+                    m_MessageDispatchQueue = m_MessageQueue;
+                    m_MessageQueue = tmp;
+                }
+
+                for (int i = 0; i < m_MessageDispatchQueue.Count; i++)
+                {
+                    OnMessage?.Invoke(m_MessageDispatchQueue[i]);
+                }
+
+                m_MessageDispatchQueue.Clear();
+            }
+
+            // Rare events: OnOpen, OnError, OnClose
             if (m_EventQueue.Count == 0) return;
 
             lock (EventQueueLock)
@@ -179,67 +217,108 @@ namespace NativeWebSocket
 
         public Task Send(byte[] bytes)
         {
-            return SendMessage(sendBytesQueue, WebSocketMessageType.Binary, new ArraySegment<byte>(bytes));
+            if (bytes.Length == 0 || State != WebSocketState.Open)
+                return Task.CompletedTask;
+
+            var segment = new ArraySegment<byte>(bytes);
+
+            lock (OutgoingMessageLock)
+            {
+                if (isSending)
+                {
+                    sendBytesQueue.Enqueue(segment);
+                    return Task.CompletedTask;
+                }
+                isSending = true;
+            }
+
+            return SendAndDrainAsync(sendBytesQueue, WebSocketMessageType.Binary, segment);
         }
 
         public Task SendText(string message)
         {
+            if (State != WebSocketState.Open)
+                return Task.CompletedTask;
+
             var encoded = Encoding.UTF8.GetBytes(message);
-            return SendMessage(sendTextQueue, WebSocketMessageType.Text, new ArraySegment<byte>(encoded, 0, encoded.Length));
-        }
+            if (encoded.Length == 0)
+                return Task.CompletedTask;
 
-        private async Task SendMessage(Queue<ArraySegment<byte>> queue, WebSocketMessageType messageType, ArraySegment<byte> buffer)
-        {
-            if (buffer.Count == 0 || State != WebSocketState.Open)
-            {
-                return;
-            }
-
-            bool sending;
+            var segment = new ArraySegment<byte>(encoded, 0, encoded.Length);
 
             lock (OutgoingMessageLock)
             {
-                sending = isSending;
-
-                if (!isSending)
+                if (isSending)
                 {
-                    isSending = true;
+                    sendTextQueue.Enqueue(segment);
+                    return Task.CompletedTask;
                 }
+                isSending = true;
             }
 
-            if (!sending)
+            return SendAndDrainAsync(sendTextQueue, WebSocketMessageType.Text, segment);
+        }
+
+        private Task SendAndDrainAsync(Queue<ArraySegment<byte>> queue, WebSocketMessageType messageType, ArraySegment<byte> buffer)
+        {
+            // Try synchronous fast path: avoid async state machine when SendAsync completes inline
+            var sendTask = m_Socket.SendAsync(buffer, messageType, true, m_CancellationToken);
+            if (sendTask.Status == TaskStatus.RanToCompletion)
             {
-                try
-                {
-                    await m_Socket.SendAsync(buffer, messageType, true, m_CancellationToken).ConfigureAwait(false);
+                return DrainQueueSync(queue, messageType);
+            }
 
-                    // Drain the queue iteratively instead of recursively
-                    while (true)
-                    {
-                        ArraySegment<byte> next;
-                        lock (OutgoingMessageLock)
-                        {
-                            if (queue.Count == 0)
-                                break;
-                            next = queue.Dequeue();
-                        }
+            return AwaitAndDrainAsync(sendTask, queue, messageType);
+        }
 
-                        await m_Socket.SendAsync(next, messageType, true, m_CancellationToken).ConfigureAwait(false);
-                    }
-                }
-                finally
+        private Task DrainQueueSync(Queue<ArraySegment<byte>> queue, WebSocketMessageType messageType)
+        {
+            while (true)
+            {
+                ArraySegment<byte> next;
+                lock (OutgoingMessageLock)
                 {
-                    lock (OutgoingMessageLock)
+                    if (queue.Count == 0)
                     {
                         isSending = false;
+                        return Task.CompletedTask;
                     }
+                    next = queue.Dequeue();
+                }
+
+                var sendTask = m_Socket.SendAsync(next, messageType, true, m_CancellationToken);
+                if (sendTask.Status != TaskStatus.RanToCompletion)
+                {
+                    // This send went async — fall through to async drain
+                    return AwaitAndDrainAsync(sendTask, queue, messageType);
                 }
             }
-            else
+        }
+
+        private async Task AwaitAndDrainAsync(Task pendingSend, Queue<ArraySegment<byte>> queue, WebSocketMessageType messageType)
+        {
+            try
+            {
+                await pendingSend.ConfigureAwait(false);
+
+                while (true)
+                {
+                    ArraySegment<byte> next;
+                    lock (OutgoingMessageLock)
+                    {
+                        if (queue.Count == 0)
+                            break;
+                        next = queue.Dequeue();
+                    }
+
+                    await m_Socket.SendAsync(next, messageType, true, m_CancellationToken).ConfigureAwait(false);
+                }
+            }
+            finally
             {
                 lock (OutgoingMessageLock)
                 {
-                    queue.Enqueue(buffer);
+                    isSending = false;
                 }
             }
         }
@@ -247,7 +326,7 @@ namespace NativeWebSocket
         public async Task Receive()
         {
             WebSocketCloseCode closeCode = WebSocketCloseCode.Abnormal;
-            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[8192]);
+            ArraySegment<byte> buffer = new ArraySegment<byte>(new byte[65536]);
             try
             {
                 while (m_Socket.State == System.Net.WebSockets.WebSocketState.Open)
@@ -266,7 +345,7 @@ namespace NativeWebSocket
                         // Fast path: single-frame message, avoid MemoryStream
                         var data = new byte[result.Count];
                         Buffer.BlockCopy(buffer.Array, buffer.Offset, data, 0, result.Count);
-                        EnqueueEvent(() => OnMessage?.Invoke(data));
+                        EnqueueMessage(data);
                     }
                     else
                     {
@@ -283,7 +362,7 @@ namespace NativeWebSocket
                             while (!result.EndOfMessage);
 
                             var data = ms.ToArray();
-                            EnqueueEvent(() => OnMessage?.Invoke(data));
+                            EnqueueMessage(data);
                         }
                     }
                 }
