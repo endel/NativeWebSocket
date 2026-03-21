@@ -1,0 +1,11 @@
+<Project>
+  <!-- Version is read from integrations/Unity/package.json (single source of truth) -->
+  <Target Name="SetVersionFromPackageJson" BeforeTargets="PrepareForBuild;GenerateNuspec">
+    <Exec Command="python3 -c &quot;import json; print(json.load(open('$(MSBuildThisFileDirectory)integrations/Unity/package.json'))['version'])&quot;" ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="PackageVersion" />
+    </Exec>
+    <PropertyGroup>
+      <Version>$(PackageVersion)</Version>
+    </PropertyGroup>
+  </Target>
+</Project>

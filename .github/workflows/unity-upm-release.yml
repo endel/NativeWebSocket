@@ -51,7 +51,7 @@ jobs:
           cp integrations/Unity/WebSocketFactoryWebGL.cs upm-package/WebSocket/
           cp integrations/Unity/WebSocket.jslib upm-package/WebSocket/
           cp integrations/Unity/WebSocket.jspre upm-package/WebSocket/
-          cp integrations/Unity/endel.nativewebsocket.asmdef upm-package/WebSocket/
+          cp integrations/Unity/colyseus.nativewebsocket.asmdef upm-package/WebSocket/
 
           # Package metadata and samples
           cp integrations/Unity/package.json upm-package/
@@ -90,7 +90,7 @@ jobs:
         cp integrations/Unity/WebSocketFactoryWebGL.cs upm-package/Assets/WebSocket/
         cp integrations/Unity/WebSocket.jslib upm-package/Assets/WebSocket/
         cp integrations/Unity/WebSocket.jspre upm-package/Assets/WebSocket/
-        cp integrations/Unity/endel.nativewebsocket.asmdef upm-package/Assets/WebSocket/
+        cp integrations/Unity/colyseus.nativewebsocket.asmdef upm-package/Assets/WebSocket/
 
         # Package metadata
         cp integrations/Unity/package.json upm-package/Assets/
