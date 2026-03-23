@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net6.0</TargetFrameworks>
+    <RootNamespace>NativeWebSocket</RootNamespace>
+    <AssemblyName>NativeWebSocket</AssemblyName>
+    <Authors>Endel Dreyer</Authors>
+    <Description>WebSocket client for .NET - works with Unity, MonoGame, Godot, and any .NET application.</Description>
+    <PackageId>Colyseus.NativeWebSocket</PackageId>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/endel/NativeWebSocket</RepositoryUrl>
+    <LangVersion>7.3</LangVersion>
+  </PropertyGroup>
+</Project>
