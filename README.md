@@ -27,7 +27,7 @@ Used in [Colyseus Unity SDK](https://github.com/colyseus/colyseus-unity-sdk).
 3. Click Add Package From Git URL
 4. Enter URL: `https://github.com/endel/NativeWebSocket.git#upm-2.0`
 
-If you need the old 1.x package instead, use `https://github.com/endel/NativeWebSocket.git#upm-1.x` in UPM, or check out the repository sources from the `1.x` branch.
+If you need the previous 1.x package instead, use `https://github.com/endel/NativeWebSocket.git#upm-1.x` in UPM, or check out the repository sources from the [`1.x` branch](https://github.com/endel/NativeWebSocket/tree/1.x).
 
 **Via .unitypackage:**
 1. Download `NativeWebSocket.unitypackage` from the [Releases](https://github.com/endel/NativeWebSocket/releases) page
@@ -262,6 +262,90 @@ new WebSocket(string url, List<string> subprotocols)
 | Property | Type | Description |
 |----------|------|-------------|
 | `State` | `WebSocketState` | `Connecting`, `Open`, `Closing`, or `Closed` |
+
+---
+
+# Migrating from 1.x
+
+## Breaking changes
+
+### Universal .NET library
+
+The core library no longer depends on `UnityEngine`. It targets `netstandard2.0` and `net6.0`, and works across Unity, MonoGame, Godot, and any .NET project. Unity-specific code (WebGL) has been moved to separate integration files.
+
+### `MainThreadUtil`, `WaitForUpdate`, and `WaitForBackgroundThread` removed
+
+These Unity-specific classes have been removed. Event dispatching is now handled automatically via `SynchronizationContext`. Remove any references to these classes from your code.
+
+```csharp
+// 1.x — these no longer exist in 2.x
+MainThreadUtil.Instance
+MainThreadUtil.synchronizationContext
+new WaitForUpdate()
+new WaitForBackgroundThread()
+```
+
+### Automatic event dispatching — no more `Update()` dispatch loop
+
+In 1.x, you had to call `DispatchMessageQueue()` every frame from `Update()`:
+
+```csharp
+// 1.x — REQUIRED in Update()
+void Update() {
+    websocket.DispatchMessageQueue();
+}
+```
+
+In 2.x, events are automatically dispatched to the main thread via `SynchronizationContext` in Unity, Godot, and MonoGame (with `WebSocketGameComponent`). **Remove the `Update()` dispatch call.** `DispatchMessageQueue()` is only needed in environments without a `SynchronizationContext` (e.g. console apps).
+
+### `Close()` accepts close code and reason
+
+```csharp
+// 1.x — no parameters
+await websocket.Close();
+
+// 2.x — optional close code and reason
+await websocket.Close(WebSocketCloseCode code = WebSocketCloseCode.Normal, string reason = null);
+```
+
+Existing `Close()` calls without arguments still compile. However, if you implemented the `IWebSocket` interface directly, you must update your implementation to match the new signature.
+
+### `IWebSocket` interface expanded
+
+The interface now declares methods in addition to events and state:
+
+```csharp
+// 2.x interface
+public interface IWebSocket {
+    event WebSocketOpenEventHandler OnOpen;
+    event WebSocketMessageEventHandler OnMessage;
+    event WebSocketErrorEventHandler OnError;
+    event WebSocketCloseEventHandler OnClose;
+
+    WebSocketState State { get; }
+
+    // New in 2.x
+    Task Connect();
+    Task Close(WebSocketCloseCode code = WebSocketCloseCode.Normal, string reason = null);
+    Task Send(byte[] data);
+    Task SendText(string message);
+}
+```
+
+Any custom `IWebSocket` implementation must now include these methods.
+
+### Source files cannot be copied directly
+
+In 1.x, you could copy `NativeWebSocket/Assets/WebSocket/WebSocket.cs` into your Unity project. In 2.x, the core source lives in `src/NativeWebSocket/` and requires a build-time transformation to add WebGL conditional compilation guards. Use UPM or the `.unitypackage` instead of copying raw files.
+
+## Migration checklist
+
+| What changed | Action required |
+|---|---|
+| `MainThreadUtil` / `WaitForUpdate` / `WaitForBackgroundThread` removed | Delete any code using these classes |
+| Automatic event dispatching | Remove `DispatchMessageQueue()` from `Update()` (Unity/Godot/MonoGame) |
+| Custom `IWebSocket` implementations | Add `Connect()`, `Close()`, `Send()`, `SendText()` methods |
+| Manual file copy installs | Switch to UPM or `.unitypackage` |
 
 ---
 
