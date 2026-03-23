@@ -1,6 +1,6 @@
 {
   "name": "com.endel.nativewebsocket",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "description": "WebSocket client for Unity - with no external dependencies (WebGL, Native, Android, iOS, UWP). Events auto-dispatch to the main thread via SynchronizationContext.",
   "license": "MIT",
   "repository": {
