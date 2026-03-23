@@ -57,6 +57,108 @@ jobs:
           cp integrations/Unity/package.json upm-package/
           cp -r integrations/Unity/Samples~ upm-package/
 
+      - name: Generate .meta files
+        run: |
+          generate_meta() {
+            local file="$1"
+            local guid
+            guid=$(echo -n "$file" | md5sum | cut -c1-32)
+            local ext="${file##*.}"
+            local meta="${file}.meta"
+
+            case "$ext" in
+              cs)
+                cat > "$meta" <<ENDMETA
+          fileFormatVersion: 2
+          guid: ${guid}
+          MonoImporter:
+            serializedVersion: 2
+            defaultReferences: []
+            executionOrder: 0
+            icon: {instanceID: 0}
+          ENDMETA
+                ;;
+              jslib|jspre)
+                cat > "$meta" <<ENDMETA
+          fileFormatVersion: 2
+          guid: ${guid}
+          PluginImporter:
+            serializedVersion: 2
+            iconMap: {}
+            executionOrder: {}
+            defineConstraints: []
+            isPreloaded: 0
+            isOverridable: 0
+            isExplicitlyReferenced: 0
+            validateReferences: 1
+            platformData:
+            - first:
+                Any:
+              second:
+                enabled: 1
+                settings: {}
+            userData:
+            assetBundleName:
+            assetBundleVariant:
+          ENDMETA
+                ;;
+              asmdef)
+                cat > "$meta" <<ENDMETA
+          fileFormatVersion: 2
+          guid: ${guid}
+          AssemblyDefinitionImporter:
+            serializedVersion: 2
+            userData:
+            assetBundleName:
+            assetBundleVariant:
+          ENDMETA
+                ;;
+              json)
+                cat > "$meta" <<ENDMETA
+          fileFormatVersion: 2
+          guid: ${guid}
+          TextScriptImporter:
+            serializedVersion: 2
+            userData:
+            assetBundleName:
+            assetBundleVariant:
+          ENDMETA
+                ;;
+              *)
+                cat > "$meta" <<ENDMETA
+          fileFormatVersion: 2
+          guid: ${guid}
+          DefaultImporter:
+            externalObjects: {}
+            userData:
+            assetBundleName:
+            assetBundleVariant:
+          ENDMETA
+                ;;
+            esac
+          }
+
+          # Generate .meta for the WebSocket folder
+          folder_guid=$(echo -n "WebSocket" | md5sum | cut -c1-32)
+          cat > upm-package/WebSocket.meta <<ENDMETA
+          fileFormatVersion: 2
+          guid: ${folder_guid}
+          folderAsset: yes
+          DefaultImporter:
+            externalObjects: {}
+            userData:
+            assetBundleName:
+            assetBundleVariant:
+          ENDMETA
+
+          # Generate .meta for package.json
+          generate_meta "upm-package/package.json"
+
+          # Generate .meta for each file in WebSocket/
+          for f in upm-package/WebSocket/*; do
+            generate_meta "$f"
+          done
+
       - name: Push package directory to subtree
         uses: s0/git-publish-subdir-action@develop
         env:
