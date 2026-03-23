@@ -320,7 +320,7 @@ jobs:
         body: |
             ${{ steps.Changelog.outputs.changelog }}
         draft: false
-        prerelease: true
+        prerelease: false
 
     - name: Upload Release Asset
       id: upload-release-asset
