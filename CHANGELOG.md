@@ -4,7 +4,7 @@ All notable changes to this project are documented in this file.
 
 This changelog starts at 2.0.5 — see the [GitHub Releases](https://github.com/endel/NativeWebSocket/releases) page for earlier versions.
 
-## 2.0.8
+## 2.0.8 - 2026-10-26
 
 ### Fixed
 
