@@ -30,7 +30,7 @@ jobs:
     name: Publish to NuGet
     runs-on: ubuntu-latest
     needs: [build]
-    # TODO: revert to: if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@v4
         with:
