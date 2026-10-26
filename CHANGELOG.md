@@ -4,6 +4,12 @@ All notable changes to this project are documented in this file.
 
 This changelog starts at 2.0.5 — see the [GitHub Releases](https://github.com/endel/NativeWebSocket/releases) page for earlier versions.
 
+## 2.0.8 - 2026-10-26
+
+### Fixed
+
+- **WebGL: `CancelConnection()` no longer throws on an open socket.** Browsers only accept 1000 or 3000-4999 in `close()`, so closing with 1006 threw. It now closes with 1000 and still reports `Abnormal` (1006) to `OnClose`, like the other platforms.
+
 ## 2.0.7 - 2026-08-06
 
 ### Fixed

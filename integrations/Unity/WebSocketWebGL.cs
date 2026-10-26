@@ -30,6 +30,9 @@ namespace NativeWebSocket
 
         protected int instanceId;
 
+        // CancelConnection() was called: OnClose reports Abnormal, like the native socket
+        private bool cancelled;
+
         public event WebSocketOpenEventHandler OnOpen;
         public event WebSocketMessageEventHandler OnMessage;
         public event WebSocketErrorEventHandler OnError;
@@ -104,7 +107,11 @@ namespace NativeWebSocket
         public void CancelConnection()
         {
             if (State == WebSocketState.Open)
-                Close(WebSocketCloseCode.Abnormal);
+            {
+                // browsers only accept 1000 or 3000-4999 in close(): 1006 would throw
+                cancelled = true;
+                Close(WebSocketCloseCode.Normal);
+            }
         }
 
         public Task Close(WebSocketCloseCode code = WebSocketCloseCode.Normal, string reason = null)
@@ -183,7 +190,7 @@ namespace NativeWebSocket
 
         public void DelegateOnCloseEvent(int closeCode)
         {
-            this.OnClose?.Invoke(WebSocketHelpers.ParseCloseCodeEnum(closeCode));
+            this.OnClose?.Invoke(cancelled ? WebSocketCloseCode.Abnormal : WebSocketHelpers.ParseCloseCodeEnum(closeCode));
         }
     }
 }
