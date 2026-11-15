@@ -2,7 +2,7 @@
   "name": "com.endel.nativewebsocket",
   "version": "2.0.8",
   "description": "WebSocket client for Unity - with no external dependencies (WebGL, Native, Android, iOS, UWP). Events auto-dispatch to the main thread via SynchronizationContext.",
-  "license": "MIT",
+  "license": "Apache-2.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/endel/NativeWebSocket.git"
