@@ -6,7 +6,7 @@
     <Authors>Endel Dreyer</Authors>
     <Description>MonoGame integration for NativeWebSocket - provides a GameComponent that enables automatic main-thread event dispatching.</Description>
     <PackageId>Colyseus.NativeWebSocket.MonoGame</PackageId>
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/endel/NativeWebSocket</RepositoryUrl>
   </PropertyGroup>
 
